@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+      <meta charset="UTF-8">
+      <title>Gestión de Clientes</title>
+      <style>
+          body {
+              font-family: 'Arial', sans-serif;
+              background-color: #e9ecef;
+              margin: 0;
+              padding: 20px;
+          }
+          h1 {
+              color: #007bff;
+              text-align: center;
+              margin-bottom: 20px;
+          }
+          .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background: #fff;
+              padding: 30px;
+              border-radius: 10px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+          }
+          input {
+              width: calc(50% - 10px);
+              padding: 12px;
+              margin: 5px;
+              border: 2px solid #007bff;
+              border-radius: 5px;
+              transition: border-color 0.3s;
+          }
+          input:focus {
+              border-color: #0056b3;
+              outline: none;
+          }
+          button {
+              padding: 12px 20px;
+              margin: 5px;
+              border: none;
+              border-radius: 5px;
+              background-color: #007bff;
+              color: white;
+              cursor: pointer;
+              transition: background-color 0.3s, transform 0.2s;
+          }
+          button:hover {
+              background-color: #0056b3;
+              transform: scale(1.05);
+          }
+          hr {
+              margin: 20px 0;
+              border: 1px solid #007bff;
+          }
+          ul {
+              list-style-type: none;
+              padding: 0;
+          }
+          li {
+              padding: 12px;
+              background: #f8f9fa;
+              margin: 5px 0;
+              border-radius: 5px;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          }
+          .button-listar {
+              width: 100%;
+              background-color: #28a745;
+              border-radius: 5px;
+          }
+          .button-listar:hover {
+              background-color: #218838;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="container">
+          <h1>Gestión de Clientes</h1>
+          <div>
+              <input id="codiClie" placeholder="Código">
+              <input id="nombClie" placeholder="Nombre">
+              <button onclick="crearCliente()">Crear</button>
+              <button onclick="actualizarCliente()">Actualizar</button>
+              <button onclick="eliminarCliente()">Eliminar</button>
+          </div>
+          <hr>
+          <button class="button-listar" onclick="listarClientes()">Listar Clientes</button>
+          <ul id="listaClientes"></ul>
+      </div>
+
+      <script>
+          const url = 'cliente';
+          
+          function listarClientes() {
+              fetch(url)
+                      .then(res => res.json())
+                      .then(data => {
+                          const lista = document.getElementById('listaClientes');
+                          lista.innerHTML = '';
+                          data.forEach(c => {
+                              let item = document.createElement('li');
+                              item.textContent = ` ${c.nombClie} `;
+                              lista.appendChild(item);
+                          });
+                      });
+          }
+          function crearCliente() {
+              const data = {
+                  codiClie: parseInt(document.getElementById('codiClie').value),
+                  nombClie: document.getElementById('nombClie').value
+              };
+              fetch(url, {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify(data)
+              })
+                      .then(res => res.json())
+                      .then(alert);
+          }
+          function actualizarCliente() {
+              const data = {
+                  codiClie: parseInt(document.getElementById('codiClie').value),
+                  nombClie: document.getElementById('nombClie').value
+              };
+              fetch(url, {
+                  method: 'PUT',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify(data)
+              })
+                      .then(res => res.json())
+                      .then(alert);
+          }
+          function eliminarCliente() {
+              const codigo = document.getElementById('codiClie').value;
+              fetch(`${url}?codiClie=${codigo}`, {method: 'DELETE'})
+                      .then(res => res.json())
+                      .then(alert);
+          }           
+      </script>
+  </body>
+</html>
