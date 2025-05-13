@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de Venta</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #4a90e2, #50e3c2);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #357abd;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Detalle de Venta</h2>
+        <form action="DetalleServlet" method="get">
+            <label for="codiDeta">Código Detalle:</label>
+            <input type="text" id="codiDeta" name="codiDeta" required>
+
+            <label for="codiVent">Código Venta:</label>
+            <input type="text" id="codiVent" name="codiVent" required>
+
+            <label for="codiProd">Código Producto:</label>
+            <input type="text" id="codiProd" name="codiProd" required>
+
+            <label for="cantDeta">Cantidad:</label>
+            <input type="number" id="cantDeta" name="cantDeta" required min="1">
+
+            <label for="preecProd">Precio Producto:</label>
+            <input type="number" id="preecProd" name="preecProd" required step="0.01" min="0">
+
+            <label for="sbttDeta">Subtotal:</label>
+            <input type="number" id="sbttDeta" name="sbttDeta" step="0.01" readonly>
+
+            <input type="submit" value="Mostrar Detalle">
+        </form>
+    </div>
+
+    <script>
+        const cantidad = document.getElementById("cantDeta");
+        const precio = document.getElementById("preecProd");
+        const subtotal = document.getElementById("sbttDeta");
+
+        function calcularSubtotal() {
+            const c = parseFloat(cantidad.value) || 0;
+            const p = parseFloat(precio.value) || 0;
+            subtotal.value = (c * p).toFixed(2);
+        }
+
+        cantidad.addEventListener("input", calcularSubtotal);
+        precio.addEventListener("input", calcularSubtotal);
+    </script>
+</body>
+</html>
