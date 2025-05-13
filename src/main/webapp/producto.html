@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Gestión de Productos</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f2f2ff;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            h1 {
+                text-align: center;
+                color: #4b0082;
+            }
+
+            form {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+                display: flex;
+                flex-direction: column;
+                width: 80%;
+                max-width: 600px;
+            }
+
+            .fila {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+
+            .fila input {
+                width: 32%;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+
+            button {
+                background-color: #6a0dad;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+            }
+
+            button:hover {
+                background-color: #5b0099;
+            }
+
+            table {
+                width: 90%;
+                border-collapse: collapse;
+                background-color: white;
+            }
+
+            th, td {
+                padding: 10px;
+                text-align: center;
+                border: 1px solid #ccc;
+            }
+
+            th {
+                background-color: #6a0dad;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Gestión de Productos 🛒</h1>
+
+        <form id="productoForm">
+            <div class="fila">
+                <input type="number" id="codiProd" placeholder="Código" required>
+                <input type="text" id="nombProd" placeholder="Nombre" required>
+                <input type="text" id="precProd" placeholder="Precio" required>
+            </div>
+            <div class="fila">
+                <input type="number" id="stocProd" placeholder="Stock" required>
+                <button type="submit">Guardar Producto</button>
+            </div>
+        </form>
+
+        <table id="tablaProductos">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <script>
+            const form = document.getElementById('productoForm');
+            const tabla = document.getElementById('tablaProductos').querySelector('tbody');
+            let modoEditar = false;
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const producto = {
+                    codiProd: parseInt(document.getElementById('codiProd').value),
+                    nombProd: document.getElementById('nombProd').value,
+                    precProd: parseFloat(document.getElementById('precProd').value),
+                    stocProd: parseFloat(document.getElementById('stocProd').value)
+                };
+
+                const metodo = modoEditar ? 'PUT' : 'POST';
+
+                fetch('productoservlet', {
+                    method: metodo,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(producto)
+                }).then(() => {
+                    form.reset();
+                    modoEditar = false;
+                    cargarProductos();
+                });
+            });
+
+            function cargarProductos() {
+                fetch('productoservlet')
+                        .then(res => res.json())
+                        .then(data => {
+                            tabla.innerHTML = '';
+                            data.forEach(p => {
+                                const fila = document.createElement('tr');
+                                fila.innerHTML = `
+                    <td>${p.codiProd}</td>
+                    <td>${p.nombProd}</td>
+                    <td>${p.precProd}</td>
+                    <td>${p.stocProd}</td>
+                    <td>
+                      <button onclick='editar(${p.codiProd})'>Editar</button>
+                      <button onclick='eliminar(${p.codiProd})'>Eliminar</button>
+                    </td>`;
+                                tabla.appendChild(fila);
+                            });
+                        });
+            }
+
+            function editar(codi) {
+                fetch(`productoservlet`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const prod = data.find(p => p.codiProd === codi);
+                            if (prod) {
+                                document.getElementById('codiProd').value = prod.codiProd;
+                                document.getElementById('nombProd').value = prod.nombProd;
+                                document.getElementById('precProd').value = prod.precProd;
+                                document.getElementById('stocProd').value = prod.stocProd;
+                                modoEditar = true;
+                            }
+                        });
+            }
+
+            function eliminar(codi) {
+                fetch(`productoservlet?codiProd=${codi}`, {method: 'DELETE'})
+                        .then(() => cargarProductos());
+            }
+
+            // Inicializa la tabla
+            cargarProductos();
+        </script>
+    </body>
+</html>
