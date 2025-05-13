@@ -2,6 +2,7 @@
 <html lang="es">
   <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Gestión de Clientes</title>
       <style>
           body {
@@ -91,20 +92,21 @@
 
       <script>
           const url = 'cliente';
-          
+
           function listarClientes() {
               fetch(url)
-                      .then(res => res.json())
-                      .then(data => {
-                          const lista = document.getElementById('listaClientes');
-                          lista.innerHTML = '';
-                          data.forEach(c => {
-                              let item = document.createElement('li');
-                              item.textContent = ` ${c.nombClie} `;
-                              lista.appendChild(item);
-                          });
+                  .then(res => res.json())
+                  .then(data => {
+                      const lista = document.getElementById('listaClientes');
+                      lista.innerHTML = '';
+                      data.forEach(c => {
+                          let item = document.createElement('li');
+                          item.textContent = ` ${c.nombClie} `;
+                          lista.appendChild(item);
                       });
+                  });
           }
+
           function crearCliente() {
               const data = {
                   codiClie: parseInt(document.getElementById('codiClie').value),
@@ -112,12 +114,25 @@
               };
               fetch(url, {
                   method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
+                  headers: {
+                      'Content-Type': 'application/json; charset=UTF-8'
+                  },
                   body: JSON.stringify(data)
               })
-                      .then(res => res.json())
-                      .then(alert);
+              .then(res => {
+                  if (res.status === 409) { // Código de conflicto si el cliente ya existe
+                      // No se muestra mensaje
+                  } else {
+                      return res.json();
+                  }
+              })
+              .then(response => {
+                  if (response) {
+                      listarClientes();
+                  }
+              });
           }
+
           function actualizarCliente() {
               const data = {
                   codiClie: parseInt(document.getElementById('codiClie').value),
@@ -125,17 +140,24 @@
               };
               fetch(url, {
                   method: 'PUT',
-                  headers: {'Content-Type': 'application/json'},
+                  headers: {
+                      'Content-Type': 'application/json; charset=UTF-8'
+                  },
                   body: JSON.stringify(data)
               })
-                      .then(res => res.json())
-                      .then(alert);
+              .then(res => res.json())
+              .then(response => {
+                  listarClientes();
+              });
           }
+
           function eliminarCliente() {
               const codigo = document.getElementById('codiClie').value;
               fetch(`${url}?codiClie=${codigo}`, {method: 'DELETE'})
-                      .then(res => res.json())
-                      .then(alert);
+                  .then(res => res.json())
+                  .then(response => {
+                      listarClientes();
+                  });
           }           
       </script>
   </body>
