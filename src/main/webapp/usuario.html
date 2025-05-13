@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Gestión de Usuarios</title>
+    </head>
+    <body>
+        <h1>Usuarios</h1>
+        <div>
+            <input id="codiUsua" placeholder="Código">
+            <input id="logiUsua" placeholder="Login">
+            <input id="passUsua" placeholder="Password">
+            <button onclick="crearUsuario()">Crear</button>
+            <button onclick="actualizarUsuario()">Actualizar</button>
+            <button onclick="eliminarUsuario()">Eliminar</button>
+        </div>
+        <hr>
+        <button onclick="listarUsuarios()">Listar Usuarios</button>
+        <ul id="listaUsuarios"></ul>
+
+        <script>
+            const url = 'usuario';
+            
+            function listarUsuarios() {
+                fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            const lista = document.getElementById('listaUsuarios');
+                            lista.innerHTML = '';
+                            data.forEach(u => {
+                                let item = document.createElement('li');
+                                item.textContent = ` ${u.logiUsua} `;
+                                lista.appendChild(item);
+                            });
+                        });
+            }
+            function crearUsuario() {
+                const data = {
+                    codiUsua: parseInt(document.getElementById('codiUsua').value),
+                    logiUsua: document.getElementById('logiUsua').value,
+                    passUsua: document.getElementById('passUsua').value
+                };
+                fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                        .then(res => res.json())
+                        .then(alert);
+            }
+            function actualizarUsuario() {
+                const data = {
+                    codiUsua: parseInt(document.getElementById('codiUsua').value),
+                    logiUsua: document.getElementById('logiUsua').value,
+                    passUsua: document.getElementById('passUsua').value
+                };
+                fetch(url, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                        .then(res => res.json())
+                        .then(alert);
+            }
+            function eliminarUsuario() {
+                const codigo = document.getElementById('codiUsua').value;
+                fetch(`${url}?codiUsua=${codigo}`, {method: 'DELETE'})
+                        .then(res => res.json())
+                        .then(alert);
+            }           
+           
+        </script>
+    </body>
+</html>
