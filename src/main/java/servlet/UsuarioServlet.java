@@ -5,9 +5,11 @@
 package servlet;
 
 import dto.Usuario;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -28,7 +30,7 @@ import org.json.JSONObject;
 public class UsuarioServlet extends HttpServlet {
 
     @PersistenceUnit(unitName = "com.mycompany_TPD06_war_1.0-SNAPSHOTPU")
-    private EntityManagerFactory emf= Persistence.createEntityManagerFactory("com.mycompany_TPD06_war_1.0-SNAPSHOTPU");
+    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("com.mycompany_TPD06_war_1.0-SNAPSHOTPU");
 
     private EntityManager getEntityManager() {
         return emf.createEntityManager();
@@ -59,10 +61,89 @@ public class UsuarioServlet extends HttpServlet {
         }
     }
 
-   
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    
+        EntityManager em = getEntityManager();
+        try {
+            BufferedReader reader = request.getReader();
+            JSONObject json = new JSONObject(reader.lines().collect(Collectors.joining()));
 
-    
+            Usuario u = new Usuario();
+            u.setCodiUsua(json.getInt("codiUsua"));
+            u.setLogiUsua(json.getString("logiUsua"));
+            u.setPassUsua(json.getString("passUsua"));
+
+            em.getTransaction().begin();
+            em.persist(u);
+            em.getTransaction().commit();
+
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Usuario creado\"}");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        EntityManager em = getEntityManager();
+        try {
+            BufferedReader reader = request.getReader();
+            JSONObject json = new JSONObject(reader.lines().collect(Collectors.joining()));
+
+            int codiUsua = json.getInt("codiUsua");
+
+            Usuario u = em.find(Usuario.class, codiUsua);
+            if (u == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Usuario no encontrado");
+                return;
+            }
+
+            em.getTransaction().begin();
+            u.setLogiUsua(json.getString("logiUsua"));
+            u.setPassUsua(json.getString("passUsua"));
+            em.getTransaction().commit();
+
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Usuario actualizado\"}");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        EntityManager em = getEntityManager();
+        try {
+            int codiUsua = Integer.parseInt(request.getParameter("codiUsua"));
+
+            Usuario u = em.find(Usuario.class, codiUsua);
+            if (u == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Usuario no encontrado");
+                return;
+            }
+
+            em.getTransaction().begin();
+            em.remove(u);
+            em.getTransaction().commit();
+
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Usuario eliminado\"}");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } finally {
+            em.close();
+        }
+    }
 
 }

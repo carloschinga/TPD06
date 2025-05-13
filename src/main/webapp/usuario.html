@@ -1,74 +1,180 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Gestión de Usuarios</title>
-    </head>
-    <body>
-        <h1>Usuarios</h1>
-        <div>
-            <input id="codiUsua" placeholder="Código">
-            <input id="logiUsua" placeholder="Login">
-            <input id="passUsua" placeholder="Password">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Usuarios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 32%;
+            font-weight: bold;
+            border: none;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #listaUsuarios {
+            list-style: none;
+            padding: 0;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        #listaUsuarios li {
+            background-color: white;
+            margin: 5px 0;
+            padding: 10px;
+            border-left: 5px solid #3498db;
+            border-radius: 5px;
+        }
+
+        .btn-listar {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .btn-listar:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gestión de Usuarios</h1>
+
+    <div class="form-container">
+        <input id="codiUsua" placeholder="Código">
+        <input id="logiUsua" placeholder="Login">
+        <input id="passUsua" placeholder="Password">
+        <div style="display: flex; justify-content: space-between;">
             <button onclick="crearUsuario()">Crear</button>
             <button onclick="actualizarUsuario()">Actualizar</button>
             <button onclick="eliminarUsuario()">Eliminar</button>
         </div>
-        <hr>
-        <button onclick="listarUsuarios()">Listar Usuarios</button>
-        <ul id="listaUsuarios"></ul>
+    </div>
 
-        <script>
-            const url = 'usuario';
-            
-            function listarUsuarios() {
-                fetch(url)
-                        .then(res => res.json())
-                        .then(data => {
-                            const lista = document.getElementById('listaUsuarios');
-                            lista.innerHTML = '';
-                            data.forEach(u => {
-                                let item = document.createElement('li');
-                                item.textContent = ` ${u.logiUsua} `;
-                                lista.appendChild(item);
-                            });
-                        });
-            }
-            function crearUsuario() {
-                const data = {
-                    codiUsua: parseInt(document.getElementById('codiUsua').value),
-                    logiUsua: document.getElementById('logiUsua').value,
-                    passUsua: document.getElementById('passUsua').value
-                };
-                fetch(url, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
+    <button class="btn-listar" onclick="listarUsuarios()">Listar Usuarios</button>
+    <ul id="listaUsuarios"></ul>
+
+    <script>
+        const url = 'usuario'; // Cambia si tu backend tiene ruta distinta
+
+        function listarUsuarios() {
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const lista = document.getElementById('listaUsuarios');
+                    lista.innerHTML = '';
+                    data.forEach(u => {
+                        let item = document.createElement('li');
+                        item.textContent = `👤 ${u.logiUsua}`;
+                        lista.appendChild(item);
+                    });
                 })
-                        .then(res => res.json())
-                        .then(alert);
+                .catch(err => alert("Error al listar usuarios: " + err));
+        }
+
+        function crearUsuario() {
+            const data = obtenerDatosFormulario();
+            if (!data) return;
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || "Usuario creado correctamente");
+                listarUsuarios();
+            })
+            .catch(err => alert("Error al crear: " + err));
+        }
+
+        function actualizarUsuario() {
+            const data = obtenerDatosFormulario();
+            if (!data) return;
+
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || "Usuario actualizado correctamente");
+                listarUsuarios();
+            })
+            .catch(err => alert("Error al actualizar: " + err));
+        }
+
+        function eliminarUsuario() {
+            const codigo = document.getElementById('codiUsua').value;
+            if (!codigo) {
+                alert("Ingrese el código del usuario a eliminar.");
+                return;
             }
-            function actualizarUsuario() {
-                const data = {
-                    codiUsua: parseInt(document.getElementById('codiUsua').value),
-                    logiUsua: document.getElementById('logiUsua').value,
-                    passUsua: document.getElementById('passUsua').value
-                };
-                fetch(url, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
+
+            fetch(`${url}?codiUsua=${codigo}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message || "Usuario eliminado correctamente");
+                    listarUsuarios();
                 })
-                        .then(res => res.json())
-                        .then(alert);
+                .catch(err => alert("Error al eliminar: " + err));
+        }
+
+        function obtenerDatosFormulario() {
+            const codi = parseInt(document.getElementById('codiUsua').value);
+            const login = document.getElementById('logiUsua').value.trim();
+            const pass = document.getElementById('passUsua').value.trim();
+
+            if (!codi || !login || !pass) {
+                alert("Por favor, complete todos los campos.");
+                return null;
             }
-            function eliminarUsuario() {
-                const codigo = document.getElementById('codiUsua').value;
-                fetch(`${url}?codiUsua=${codigo}`, {method: 'DELETE'})
-                        .then(res => res.json())
-                        .then(alert);
-            }           
-           
-        </script>
-    </body>
+
+            return { codiUsua: codi, logiUsua: login, passUsua: pass };
+        }
+    </script>
+</body>
 </html>
