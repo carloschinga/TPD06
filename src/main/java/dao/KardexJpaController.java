@@ -139,5 +139,4 @@ public class KardexJpaController implements Serializable {
             em.close();
         }
     }
-    
 }

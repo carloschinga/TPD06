@@ -1,87 +1,133 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package servlet;
 
+import dao.KardexJpaController;
+import dao.exceptions.NonexistentEntityException;
+import dto.Kardex;
+import dto.Producto;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-/**
- *
- * @author Naomi Alejandra Vega
- */
 @WebServlet(name = "KardexServlet", urlPatterns = {"/kardex"})
 public class KardexServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet KardexServlet</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet KardexServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
+    private final EntityManagerFactory emf = Persistence.createEntityManagerFactory("com.mycompany_TPD06_war_1.0-SNAPSHOTPU");
+    private final KardexJpaController kardexController = new KardexJpaController(emf);
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    // GET: Listar Kardex
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
+
+        try (PrintWriter out = response.getWriter()) {
+            List<Kardex> kardexList = kardexController.findKardexEntities();
+            JSONArray jsonArray = new JSONArray();
+            for (Kardex k : kardexList) {
+                JSONObject obj = new JSONObject();
+                obj.put("codiKard", k.getCodiKard());
+                obj.put("cantProd", k.getCantProd());
+                obj.put("saldProd", k.getSaldProd());
+                obj.put("moviKard", k.getMoviKard());
+                obj.put("codiProd", k.getCodiProd().getCodiProd()); // Relación
+                obj.put("nombProd", k.getCodiProd().getNombProd()); // Nombre producto relacionado
+                jsonArray.put(obj);
+            }
+            out.print(jsonArray.toString());
+            out.flush();
+        }
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    // POST: Crear Kardex
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
+
+        BufferedReader reader = request.getReader();
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) sb.append(line);
+        JSONObject json = new JSONObject(sb.toString());
+
+        try {
+            Kardex kardex = new Kardex();
+            kardex.setCodiKard(json.getInt("codiKard"));
+            kardex.setCantProd(json.getInt("cantProd"));
+            kardex.setSaldProd(json.getInt("saldProd"));
+            kardex.setMoviKard(json.getInt("moviKard"));
+
+            // Relación con Producto
+            Producto prod = new Producto();
+            prod.setCodiProd(json.getInt("codiProd"));
+            kardex.setCodiProd(prod);
+
+            kardexController.create(kardex);
+            response.setStatus(HttpServletResponse.SC_CREATED);
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
+    // PUT: Modificar Kardex
     @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
 
-}
+        BufferedReader reader = request.getReader();
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) sb.append(line);
+        JSONObject json = new JSONObject(sb.toString());
+
+        try {
+            Integer codiKard = json.getInt("codiKard");
+            Kardex kardex = kardexController.findKardex(codiKard);
+            if (kardex != null) {
+                kardex.setCantProd(json.getInt("cantProd"));
+                kardex.setSaldProd(json.getInt("saldProd"));
+                kardex.setMoviKard(json.getInt("moviKard"));
+
+                Producto prod = new Producto();
+                prod.setCodiProd(json.getInt("codiProd"));
+                kardex.setCodiProd(prod);
+
+                kardexController.edit(kardex);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Kardex no encontrado");
+            }
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    // DELETE: Eliminar Kardex
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
+
+        try {
+            Integer codiKard = Integer.parseInt(request.getParameter("codiKard"));
+            kardexController.destroy(codiKard);
+        } catch (NonexistentEntityException e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Kardex no encontrado");
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+}   
+
